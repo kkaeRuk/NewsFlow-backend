@@ -1,4 +1,5 @@
 package com.example.oauth2;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
@@ -8,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
@@ -25,21 +28,29 @@ import java.util.stream.Collectors;
 
 
 @Configuration
-@PropertySource("application.properties")
+@PropertySource("classpath:application.properties")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-          .antMatchers("/oauth_login")
+          .antMatchers("/oauth_login","/loginFailure","/")
           .permitAll()
           .anyRequest()
           .authenticated()
           .and()
           .oauth2Login()
-          .loginPage("/oauth_login");
+          .loginPage("/oauth_login")
+          .authorizationEndpoint()
+          .baseUri("/oauth2/authorize-client")
+          .authorizationRequestRepository(authorizationRequestRepository())
+          .and()
+          .tokenEndpoint()
+          .accessTokenResponseClient(accessTokenResponseClient())
+          .and()
+          .defaultSuccessUrl("/loginSuccess")
+          .failureUrl("/loginFailure");
     }
-
 
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
@@ -52,8 +63,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return accessTokenResponseClient;
     }
 
-
-    // additional configuration for non-Spring Boot projects
+/*
+    // Spring Boot projects 아닌경우에 추가
     private static List<String> clients = Arrays.asList("google", "facebook");
 
     @Bean
@@ -93,5 +104,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
         return null;
     }
-
+*/
 }
